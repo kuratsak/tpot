@@ -47,7 +47,7 @@ def get_by_name(opname, operators):
     ret_op_class = ret_op_classes[0]
     return ret_op_class
 
-def export_pipeline(exported_pipeline, operators, pset):
+def export_pipeline(exported_pipeline, operators, pset, pscore=None):
     """Generates the source code of a TPOT Pipeline
 
     Parameters
@@ -56,6 +56,8 @@ def export_pipeline(exported_pipeline, operators, pset):
         The pipeline that is being exported
     operators:
         List of operator classes from operator library
+    pscore:
+        Optional pipeline score to be saved to the exported file
 
     Returns
     -------
@@ -68,6 +70,11 @@ def export_pipeline(exported_pipeline, operators, pset):
 
     # Have the exported code import all of the necessary modules and functions
     pipeline_text = generate_import_code(exported_pipeline, operators)
+
+    if pscore is not None:
+        pipeline_text += '\n# Score on the training set was:{}\n'.format(pscore)
+    else:
+        pipeline_text += '\n'
 
     # Replace the function calls with their corresponding Python code
     pipeline_text += pipeline_code_wrapper(generate_export_pipeline_code(pipeline_tree, operators))
@@ -223,8 +230,7 @@ def pipeline_code_wrapper(pipeline_code):
     Source code for the sklearn pipeline and calls to fit and predict
 
     """
-    return """
-exported_pipeline = {}
+    return """exported_pipeline = {}
 
 exported_pipeline.fit(training_features, training_classes)
 results = exported_pipeline.predict(testing_features)
