@@ -140,6 +140,14 @@ def main():
         type=int, help='Number of folds to evaluate each pipeline over in '
         'k-fold cross-validation during the TPOT optimization process.')
 
+    parser.add_argument('-psp', action='store', dest='PERIODIC_SAVE_PATH', default=None,
+        type=str, help='If supplied, a folder in which tpot will periodically '
+        'save the best pipeline so far while optimizing. '
+        'This is useful in multiple cases: '
+        'sudden death before tpot could save an optimized pipeline, '
+        'progress tracking, '
+        "grabbing a pipeline while it's still optimizing etc.")
+
     parser.add_argument('-njobs', action='store', dest='NUM_JOBS', default=1,
         type=int, help='Number of CPUs for evaluating pipelines in parallel '
         ' during the TPOT optimization process. Assigning this to -1 will use as many '
@@ -216,7 +224,7 @@ def main():
                      cv=args.CV, n_jobs=args.NUM_JOBS, scoring=args.SCORING_FN,
                      max_time_mins=args.MAX_TIME_MINS, max_eval_time_mins=args.MAX_EVAL_MINS,
                      random_state=args.RANDOM_STATE, config_dict=args.CONFIG_FILE,
-                     verbosity=args.VERBOSITY, disable_update_check=args.DISABLE_UPDATE_CHECK)
+                     verbosity=args.VERBOSITY, disable_update_check=args.DISABLE_UPDATE_CHECK, periodic_save_path=args.PERIODIC_SAVE_PATH)
 
     print('')
 
