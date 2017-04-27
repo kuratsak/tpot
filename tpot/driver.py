@@ -129,7 +129,11 @@ def main():
         'squared error (mse) is used for regression problems. '
         'TPOT assumes that any function with "error" or "loss" in the name is meant to '
         'be minimized, whereas any other functions will be maximized. '
-        'Offers the same options as cross_val_score: '
+        'Note: If you wrote your own function, set this argument to mymodule.myfunction'
+        'and TPOT will import your module and take the function from there.'
+        'TPOT will assume the module can be imported from the current workdir.'
+
+        'Built in scores are the same group as cross_val_score: '
         '"accuracy", "adjusted_rand_score", "average_precision", "f1", "f1_macro", '
         '"f1_micro", "f1_samples", "f1_weighted", "log_loss", "mean_absolute_error", '
         '"mean_squared_error", "median_absolute_error", "precision", "precision_macro", '
@@ -219,9 +223,28 @@ def main():
     else:
         tpot_type = TPOTRegressor
 
+    if "." in args.SCORING_FN:
+        try:
+            module_name, func_name = args.SCORING_FN.rsplit('.', 1)
+
+            import sys
+            import os
+            from importlib import import_module
+            module_path = os.getcwd()
+            sys.path.insert(0, module_path)
+            scoring_func = getattr(import_module(module_name), func_name)
+            
+            print('manual scoring function: {}'.format(scoring_func))
+            print('taken from module: {}'.format(module_name))
+        except Exception as e:
+            print('failed importing custom scoring function, error: {}'.format(str(e)))
+            raise
+    else:
+        scoring_func = args.SCORING_FN
+
     tpot = tpot_type(generations=args.GENERATIONS, population_size=args.POPULATION_SIZE,
                      offspring_size=args.OFFSPRING_SIZE, mutation_rate=args.MUTATION_RATE, crossover_rate=args.CROSSOVER_RATE,
-                     cv=args.CV, n_jobs=args.NUM_JOBS, scoring=args.SCORING_FN,
+                     cv=args.CV, n_jobs=args.NUM_JOBS, scoring=scoring_func,
                      max_time_mins=args.MAX_TIME_MINS, max_eval_time_mins=args.MAX_EVAL_MINS,
                      random_state=args.RANDOM_STATE, config_dict=args.CONFIG_FILE,
                      verbosity=args.VERBOSITY, disable_update_check=args.DISABLE_UPDATE_CHECK, periodic_save_path=args.PERIODIC_SAVE_PATH)
